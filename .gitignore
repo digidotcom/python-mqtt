@@ -2,3 +2,7 @@
 
 *.crt
 *.key
+*.pem
+
+!aws/aws_ver.crt
+!azure/azur_ver.crt

@@ -1,27 +1,39 @@
-# Takes input from a keyboard and publishes it over MQTT to AWS IoT
+# Takes input from a keyboard and publishes it over MQTT an MQTT broker
 
 import paho.mqtt.client as mqtt
 import ssl
 
 # remember to respect 8.3 file format
-ver = "ver_pem.crt" # path to root CA
-prv = "prv_pem.key" # path to private key
-crt = "crt_pem.crt" # path to cert
+ver = "ver.crt" # path to root CA
+prv = "prv.key" # path to private key
+crt = "crt.crt" # path to cert
 
+client_name = "example"
+username = "example"
+password = None
+
+connect_url = "example-url"
+port = 8883 # 1883 if not SSL/TLS
+timeout = 600
+
+qos = 0
 
 # define function to run whenever a message is published
 def on_publish(client, userdata, mid):
 	print("publish successful")
+
+	# after publishing disconnect, breaks out of loop_forever()
+	client.disconnect()
 	pass
 
 
 # name your client whatever you want
-client = mqtt.Client("abc123")
+client = mqtt.Client(client_name)
 
-# client username must be "?SDK=Python&Version=1.4.0" to work with AWS IoT
-client.username_pw_set("?SDK=Python&Version=1.4.0")
+# set your username/password
+client.username_pw_set(username=username, password=password)
 
-
+# not needed if not doing SSL/TLS
 client.tls_set( ca_certs=ver, certfile=crt, keyfile=prv,
 	cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23)
 
@@ -30,15 +42,14 @@ client.on_publish = on_publish
 
 print("connecting...")
 
-# connect to your desired AWS URL, on port 883 (encrypted MQTT), with a largeish timeout
-check = client.connect("your-url.amazonaws.com", 8883, 600)
+# connect to your desired url:port with specified timeout
+check = client.connect(connect_url, port, timeout)
 
-if check == mqtt.MQTT_ERR_SUCCESS:
+if(check == mqtt.MQTT_ERR_SUCCESS):
 	print("connection succeded")
 else:
 	print("connect failed")
 	exit(1)
-
 
 # start the client, non blocking
 client.loop_start()
@@ -49,7 +60,7 @@ topic = raw_input("Enter topic: ")
 # publish 5 messages and exit
 for i in range(5):
 	message = raw_input("\nEnter message " + str(i) + " to publish:")
-	client.publish(topic, message)
+	client.publish(topic, message, qos)
 
 
 # stop the cient
