@@ -932,6 +932,13 @@ class Client(object):
                 do_handshake_on_connect=False
                 )
 
+            ssl_sock.settimeout(self._keepalive)
+            ssl_sock.do_handshake()
+
+            self._sock = ssl_sock
+        else:
+            self._sock = sock
+
             #try:
             #    # Try with server_hostname, even it's not supported in certain scenarios
             #    sock = self._ssl_context.wrap_socket(
@@ -954,8 +961,6 @@ class Client(object):
             #            self._ssl_context.check_hostname):
             #        verify_host = False
 
-            ssl_sock.settimeout(self._keepalive)
-            ssl_sock.do_handshake()
 
             #if verify_host:
             #    ssl.match_hostname(ssl_sock.getpeercert(), self._host)
@@ -965,7 +970,6 @@ class Client(object):
         #    sock = WebsocketWrapper(sock, self._host, self._port, self._ssl,
         #        self._websocket_path, self._websocket_extra_headers)
 
-        self._sock = ssl_sock
         #self._sock.setblocking(0)
 
         return self._send_connect(self._keepalive, self._clean_session)
